@@ -2,6 +2,7 @@ package org.openvoipalliance.voiplib
 
 import android.Manifest.permission.RECORD_AUDIO
 import android.content.Context
+import android.util.Log
 import androidx.annotation.RequiresPermission
 import org.koin.core.component.inject
 import org.openvoipalliance.voiplib.config.Config
@@ -48,6 +49,7 @@ class VoIPLib private constructor(private val context: Context) {
      *
      */
     fun register(callback: RegistrationCallback): VoIPLib {
+        Log.e("TEST123", "TEST REG")
         sipRegisterRepository.register(callback)
         return this
     }
