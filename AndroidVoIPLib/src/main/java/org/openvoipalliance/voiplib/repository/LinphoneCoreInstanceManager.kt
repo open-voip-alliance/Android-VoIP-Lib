@@ -169,6 +169,8 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
     override fun onCallStateChanged(lc: Core, linphoneCall: LinphoneCall, state: LinphoneCall.State, message: String) {
         Log.e(TAG, "callState: $state, Message: $message")
 
+        val remotePartyId = linphoneCall.remoteParams?.getCustomHeader("Remote-Party-ID")
+        Log.e("TEST123", "Remote-Party-ID: $remotePartyId")
         val call = Call(linphoneCall ?: return)
 
         Log.e(TAG, "callState: $state, Message: $message - SENDING EVENT")
