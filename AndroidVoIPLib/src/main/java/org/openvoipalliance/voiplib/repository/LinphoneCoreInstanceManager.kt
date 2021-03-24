@@ -4,6 +4,9 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.linphone.core.*
 import org.linphone.core.GlobalState.Off
 import org.linphone.core.GlobalState.On
@@ -199,14 +202,16 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
     }
 
     override fun onLogMessageWritten(service: LoggingService, domain: String, lev: org.linphone.core.LogLevel, message: String) {
-        config.logListener?.onLogMessageWritten(when (lev) {
-            Debug -> LogLevel.DEBUG
-            Trace -> LogLevel.TRACE
-            Message -> LogLevel.MESSAGE
-            Warning -> LogLevel.WARNING
-            Error -> LogLevel.ERROR
-            Fatal -> LogLevel.FATAL
-        }, message)
+        GlobalScope.launch(Dispatchers.IO) {
+            config.logListener?.onLogMessageWritten(when (lev) {
+                Debug -> LogLevel.DEBUG
+                Trace -> LogLevel.TRACE
+                Message -> LogLevel.MESSAGE
+                Warning -> LogLevel.WARNING
+                Error -> LogLevel.ERROR
+                Fatal -> LogLevel.FATAL
+            }, message)
+        }
     }
 
     @Synchronized
