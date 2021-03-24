@@ -28,8 +28,8 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.1.0")
     testImplementation("junit:junit:4.12")
 
-    api("org.koin:koin-android:2.2.0-rc-4")
-    embed("org.linphone:linphone-sdk-android:4.5.0-beta.8+2efed44")
+    api("org.koin:koin-android:2.2.0")
+    embed("org.linphone:linphone-sdk-android:4.5.0-beta.117+4925ad5")
 }
 
 publishing {
