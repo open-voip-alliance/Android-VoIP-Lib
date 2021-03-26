@@ -1,4 +1,4 @@
-
+[![Release](https://jitpack.io/v/open-voip-alliance/Android-VoIP-Lib.svg)](https://jitpack.io/#open-voip-alliance/Android-VoIP-Lib)
 
 # AndroidVoIPLib
 
@@ -6,7 +6,7 @@ This is library is an opinionated VoIP wrapper for Android applications. It curr
 
 ## Installation
 
-    implementation 'org.openvoipalliance:AndroidVoIPLib:1.x.x'
+Install using [Jitpack.io](https://jitpack.io/#open-voip-alliance/Android-VoIP-Lib).
 
 ## Registration
 
