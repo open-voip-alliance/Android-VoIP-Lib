@@ -17,7 +17,6 @@ import org.openvoipalliance.voiplib.model.Call
 import org.openvoipalliance.voiplib.model.Codec
 import org.openvoipalliance.voiplib.model.PathConfigurations
 import org.openvoipalliance.voiplib.repository.initialise.LogLevel
-import org.openvoipalliance.voiplib.service.SimpleLinphoneCoreListener
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -29,10 +28,9 @@ private const val BITRATE_LIMIT = 36
 private const val DOWNLOAD_BANDWIDTH = 0
 private const val UPLOAD_BANDWIDTH = 0
 
-internal class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleLinphoneCoreListener, LoggingServiceListener {
+internal class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleCoreListener, LoggingServiceListener {
     private var destroyed: Boolean = false
     private var pathConfigurations: PathConfigurations = PathConfigurations(mServiceContext.filesDir.absolutePath)
-    private var timer: Timer? = null
     lateinit var config: Config
         internal set
     private var linphoneCore: Core? = null
@@ -72,32 +70,12 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
                 addListener(this@LinphoneCoreInstanceManager)
                 enableDnsSrv(false)
                 enableDnsSearch(false)
-                isAutoIterateEnabled = false
+                isAutoIterateEnabled = true
                 start()
             }
 
             initLibLinphone()
 
-            val task: TimerTask = object : TimerTask() {
-                override fun run() {
-                    Handler(Looper.getMainLooper()).post {
-                        if (destroyed) {
-                            isRegistered = false
-                            cancel()
-                            Factory.instance().loggingService.removeListener(this@LinphoneCoreInstanceManager)
-                            linphoneCore?.isNetworkReachable = false
-                            linphoneCore?.stop()
-                            linphoneCore?.removeListener(this@LinphoneCoreInstanceManager)
-                            linphoneCore = null
-                            return@post
-                        }
-
-                        safeLinphoneCore?.iterate()
-                    }
-                }
-            }
-            timer = Timer("Linphone Scheduler")
-            timer?.schedule(task, 0, 20)
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e(TAG, "startLibLinphone: cannot start linphone")
@@ -117,11 +95,20 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
             rootCa = pathConfigurations.linphoneRootCaFile
             remoteRingbackTone = pathConfigurations.ringSound
             isNetworkReachable = true
-            enableEchoCancellation(true)
-            enableAdaptiveRateControl(true)
             config?.setInt("audio", "codec_bitrate_limit", BITRATE_LIMIT)
             downloadBandwidth = DOWNLOAD_BANDWIDTH
             uploadBandwidth = UPLOAD_BANDWIDTH
+        }
+
+        config.logListener?.onLogMessageWritten(LogLevel.MESSAGE, "Applying ${userConfig.advancedVoIPSettings}")
+
+        linphoneCore?.apply {
+            enableEchoCancellation(userConfig.advancedVoIPSettings.echoCancellation)
+            enableAdaptiveRateControl(userConfig.advancedVoIPSettings.adaptiveRateControl)
+            mtu = userConfig.advancedVoIPSettings.mtu
+            adaptiveRateAlgorithm = userConfig.advancedVoIPSettings.adaptiveRateAlgorithm.name.toLowerCase(Locale.ROOT)
+            enableRtpBundle(userConfig.advancedVoIPSettings.mediaMultiplexing)
+            enableAudioAdaptiveJittcomp(userConfig.advancedVoIPSettings.jitterCompensation)
         }
 
         setCodecMime(config.codecs.toSet())
@@ -171,6 +158,7 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
 
     override fun onCallStateChanged(lc: Core, linphoneCall: LinphoneCall, state: LinphoneCall.State, message: String) {
         Log.e(TAG, "callState: $state, Message: $message")
+Log.e("TEST123", "Remotparty:" + linphoneCall.remoteParams?.getCustomHeader("Remote-Party-ID"))
 
         val call = Call(linphoneCall ?: return)
 
@@ -216,7 +204,12 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
 
     @Synchronized
     fun destroy() {
-        destroyed = true
+        isRegistered = false
+        Factory.instance().loggingService.removeListener(this@LinphoneCoreInstanceManager)
+        linphoneCore?.isNetworkReachable = false
+        linphoneCore?.stop()
+        linphoneCore?.removeListener(this@LinphoneCoreInstanceManager)
+        linphoneCore = null
     }
 
     companion object {

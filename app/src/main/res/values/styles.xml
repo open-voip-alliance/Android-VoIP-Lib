@@ -10,4 +10,9 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="keypadDigitButton">
+        <item name="android:textSize">24sp</item>
+        <item name="android:layout_marginHorizontal">3dp</item>
+    </style>
+
 </resources>

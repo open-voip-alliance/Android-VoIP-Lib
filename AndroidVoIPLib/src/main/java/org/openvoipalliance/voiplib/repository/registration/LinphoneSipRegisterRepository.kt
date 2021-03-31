@@ -3,7 +3,7 @@ package org.openvoipalliance.voiplib.repository.registration
 import android.R.attr
 import org.linphone.core.*
 import org.openvoipalliance.voiplib.repository.LinphoneCoreInstanceManager
-import org.openvoipalliance.voiplib.service.SimpleLinphoneCoreListener
+import org.openvoipalliance.voiplib.repository.SimpleCoreListener
 
 internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipRegisterRepository {
 
@@ -14,7 +14,7 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
     override fun register(callback: RegistrationCallback) {
         val core = linphoneCoreInstanceManager.safeLinphoneCore ?: return
 
-        core.addListener(object : SimpleLinphoneCoreListener {
+        core.addListener(object : SimpleCoreListener {
             override fun onRegistrationStateChanged(lc: Core, cfg: ProxyConfig, cstate: RegistrationState, message: String) {
                 callback.invoke(when (cstate) {
                     RegistrationState.None -> {

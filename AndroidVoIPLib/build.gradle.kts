@@ -1,22 +1,25 @@
-import java.util.*
-
 plugins {
     id("com.android.library")
     kotlin("android")
-    kotlin("android.extensions")
-    id("com.kezong.fat-aar")
     id("maven-publish")
-    id("com.jfrog.bintray")
+    id("com.kezong.fat-aar")
 }
 
-val libraryVersion = "0.6.26"
+val libraryVersion = "0.6.28"
 
 android {
     compileSdkVersion(30)
     defaultConfig {
-        minSdkVersion(23)
+        minSdkVersion(26)
         targetSdkVersion(30)
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
 
@@ -24,18 +27,18 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation("androidx.appcompat:appcompat:1.2.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:${rootProject.extra["kotlinVersion"]}")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.6")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.1.0")
     testImplementation("junit:junit:4.12")
 
-    api("org.koin:koin-android:2.2.0")
-    embed("org.linphone:linphone-sdk-android:4.5.0-beta.117+4925ad5")
+    api("org.koin:koin-android:2.2.2")
+    embed("org.linphone:linphone-sdk-android:4.5.0")
 }
 
 publishing {
     publications {
         create<MavenPublication>("Production") {
-            artifact("$buildDir/outputs/aar/AndroidVoIPLib-release.aar")
+            artifact("$buildDir/outputs/aar/AndroidPhoneLib-release.aar")
             groupId = "org.openvoipalliance"
             artifactId = "AndroidPhoneLib"
             version = libraryVersion
@@ -54,28 +57,4 @@ publishing {
             }
         }
     }
-}
-
-fun findProperty(s: String) = project.findProperty(s) as String?
-
-bintray {
-    user = findProperty("bintray.user")
-    key = findProperty("bintray.token")
-    setPublications("Production")
-    pkg(delegateClosureOf<com.jfrog.bintray.gradle.BintrayExtension.PackageConfig> {
-        repo = "AndroidPhoneLib"
-        name = "AndroidPhoneLib"
-        websiteUrl = "https://github.com/open-voip-alliance/AndroidPhoneLib"
-        githubRepo = "open-voip-alliance/AndroidPhoneLib"
-        vcsUrl = "https://github.com/open-voip-alliance/AndroidPhoneLib"
-        description = "An Android library to facilitate SIP communication."
-        setLabels("kotlin")
-        setLicenses("Apache-2.0")
-        publish = true
-        desc = description
-        version(delegateClosureOf<com.jfrog.bintray.gradle.BintrayExtension.VersionConfig> {
-            name = libraryVersion
-            released = Date().toString()
-        })
-    })
 }

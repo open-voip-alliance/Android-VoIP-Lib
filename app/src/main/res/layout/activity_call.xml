@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.call.CallActivity">
+
+    <LinearLayout
+        android:id="@+id/callHeadings"
+        app:layout_constraintBottom_toTopOf="@id/callActions"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginTop="30dp"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/callTitle"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Steven"
+            android:textStyle="bold"
+            android:textSize="35sp"/>
+
+        <TextView
+            android:id="@+id/callSubtitle"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="0800123123"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:id="@+id/callDuration"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="00:32"/>
+
+        <TextView
+            android:id="@+id/callStatus"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Connecting"/>
+
+        <LinearLayout
+            android:visibility="visible"
+            android:id="@+id/transferContainer"
+            android:layout_marginTop="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="10dp"
+            android:background="@color/colorPrimaryDark"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/transferCallInformation"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Chris (0123455680)"
+                android:textStyle="bold"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:gravity="center"
+                android:layout_gravity="center_horizontal"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="On Hold" />
+
+            <ImageButton
+                android:id="@+id/transferMergeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/colorPrimaryDark"
+                android:src="@drawable/ic_call_merge"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <TableLayout
+        android:id="@+id/callActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:paddingHorizontal="10dp"
+        android:stretchColumns="*"
+        app:layout_constraintTop_toBottomOf="@id/callHeadings">
+
+        <TableRow>
+
+            <Button
+                android:id="@+id/muteButton"
+                android:layout_marginHorizontal="10dp"
+                android:text="Mute" />
+
+            <Button
+                android:id="@+id/holdButton"
+                android:layout_marginHorizontal="10dp"
+                android:text="Hold" />
+
+
+            <Button
+                android:id="@+id/transferButton"
+                android:layout_marginHorizontal="10dp"
+                android:text="Transfer" />
+        </TableRow>
+
+        <TableRow>
+            <Button
+                android:id="@+id/dtmfButton"
+                android:layout_marginHorizontal="10dp"
+                android:text="DTMF"
+                android:enabled="true"/>
+        </TableRow>
+
+        <TableRow android:layout_marginTop="20dp">
+
+            <Space />
+
+            <ImageButton
+                android:id="@+id/endCallButton"
+                android:background="@color/red_500"
+                android:paddingVertical="10dp"
+                android:src="@drawable/ic_call_end"
+                android:tint="#fff" />
+
+            <Space />
+        </TableRow>
+
+    </TableLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/callActions" >
+        <TextView
+            android:id="@+id/callDetailsAdvanced"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1000"
+            android:textIsSelectable="true"
+            android:textSize="9sp"/>
+    </ScrollView>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

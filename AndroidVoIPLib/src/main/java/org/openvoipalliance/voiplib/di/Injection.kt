@@ -12,7 +12,7 @@ internal class Injection(private val context: Context) : VoIPLibKoinComponent {
     init {
         voipLibKoin = koinApplication {
             androidContext(context)
-            modules(getModules())
+            modules(listOf(repositoryModule))
         }
     }
 

@@ -1,27 +1,6 @@
 <resources>
-    <string name="app_name" translatable="false">Simple VoIPLib implementation</string>
-
-    <string name="accept_call">Accept call</string>
-    <string name="audio_call">Audio call</string>
-    <string name="dial_number">Dial number</string>
-    <string name="encrypted">Encrypted</string>
-    <string name="hang_up">Hang up</string>
-    <string name="login">Login</string>
-    <string name="mute">Mute</string>
-    <string name="registration_failed">Registration failed</string>
-    <string name="sip_account">Sip account</string>
-    <string name="sip_password">Sip password</string>
-    <string name="sip_server">Sip server</string>
-    <string name="speaker">Speaker</string>
-    <string name="successfully_logged_in">Successfully logged in!</string>
-    <string name="video_call">Video call</string>
-    <string name="hold">Hold</string>
-    <string name="unregister">Unregister</string>
-    <string name="successfully_unregistered">Successfully unregistered</string>
-    <string name="transfer">Transfer</string>
-    <string name="attended_transfer">Attd Transfer</string>
-    <string name="merge_calls">Merge Attd Transfer</string>
-    <string name="add_call">Add call</string>
-    <string name="switch_calls">Switch calls</string>
-    <string name="logout">Logout</string>
+    <string name="app_name">Android VoIP Lib Example</string>
+    <string name="title_dialer">Dialer</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_log">Log</string>
 </resources>

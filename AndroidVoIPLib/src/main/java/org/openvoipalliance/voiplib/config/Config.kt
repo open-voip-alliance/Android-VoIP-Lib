@@ -16,5 +16,6 @@ data class Config(
         val codecs: Array<Codec> = arrayOf(Codec.G722, Codec.G729, Codec.GSM, Codec.ILBC, Codec.ISAC, Codec.L16, Codec.OPUS, Codec.PCMA, Codec.PCMU, Codec.SPEEX),
         val userAgent: String = "AndroidVoIPLib",
         val onReady: GlobalStateCallback = {},
-        val onDestroy: GlobalStateCallback = {}
+        val onDestroy: GlobalStateCallback = {},
+        val advancedVoIPSettings: AdvancedVoIPSettings = AdvancedVoIPSettings()
 )

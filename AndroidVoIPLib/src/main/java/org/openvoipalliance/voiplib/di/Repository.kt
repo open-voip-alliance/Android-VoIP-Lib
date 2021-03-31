@@ -11,24 +11,13 @@ import org.openvoipalliance.voiplib.repository.initialise.SipInitialiseRepositor
 import org.openvoipalliance.voiplib.repository.registration.LinphoneSipRegisterRepository
 import org.openvoipalliance.voiplib.repository.registration.SipRegisterRepository
 
-fun getModules() = listOf(
-        linphoneModule,
-        presentationModule,
-        repositoryModule
-)
-
-val presentationModule = module {
-}
-
 @Suppress("USELESS_CAST")
 val repositoryModule = module {
+    single { LinphoneCoreInstanceManager(get()) }
     single { LinphoneSipInitialiseRepository(get(), get()) as SipInitialiseRepository }
     single { LinphoneSipRegisterRepository(get()) as SipRegisterRepository }
 
     single { LinphoneSipActiveCallControlsRepository(get()) as SipActiveCallControlsRepository  }
     single { LinphoneSipSessionRepository(get()) as SipSessionRepository }
-}
 
-val linphoneModule = module {
-    single { LinphoneCoreInstanceManager(get()) }
 }

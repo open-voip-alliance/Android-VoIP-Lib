@@ -96,4 +96,6 @@ class Actions(context: Context, private val call: Call) : VoIPLibKoinComponent {
      *
      */
     fun sendDtmf(dtmf: String) = sipCallControlsRepository.sendDtmf(call, dtmf)
+
+    fun callInfo(): String = sipCallControlsRepository.provideCallInfo(call)
 }

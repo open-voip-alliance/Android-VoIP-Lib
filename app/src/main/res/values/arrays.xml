@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="codecs">
+        <item>GSM</item>
+        <item>G722</item>
+        <item>G729</item>
+        <item>ILBC</item>
+        <item>ISAC</item>
+        <item>L16</item>
+        <item>OPUS</item>
+        <item>PCMU</item>
+        <item>PCMA</item>
+        <item>SPEEX</item>
+    </string-array>
+
+    <string-array name="adaptive_rate_algorithm">
+        <item>Basic</item>
+        <item>Advanced</item>
+    </string-array>
+</resources>

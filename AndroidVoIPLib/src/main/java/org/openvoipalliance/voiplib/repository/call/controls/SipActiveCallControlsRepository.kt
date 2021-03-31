@@ -21,4 +21,6 @@ interface SipActiveCallControlsRepository {
     fun resumeCall(call: Call)
 
     fun sendDtmf(call: Call, dtmf: String)
+
+    fun provideCallInfo(call: Call): String
 }
