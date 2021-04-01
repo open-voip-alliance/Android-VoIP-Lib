@@ -1,5 +1,6 @@
 package org.openvoipalliance.voiplibexample.ui.call
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -36,6 +37,7 @@ class CallActivity : AppCompatActivity() {
 
     private var timer: Timer? = null
 
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_call)
@@ -57,10 +59,21 @@ class CallActivity : AppCompatActivity() {
         }
 
         transferButton.setOnClickListener {
-
+            TransferDialog(this).apply {
+                onTransferListener = TransferDialog.OnTransferListener { number ->
+                    calls.activeCall?.let {
+                        calls.transfer = lib.actions(it).beginAttendedTransfer(number)
+                    }
+                    dismiss()
+                }
+                show(supportFragmentManager, "")
+            }
         }
 
         transferMergeButton.setOnClickListener {
+            calls.transfer?.let {
+                lib.actions(it.from).finishAttendedTransfer(it)
+            }
         }
 
         dtmfButton.setOnClickListener {
@@ -109,13 +122,10 @@ class CallActivity : AppCompatActivity() {
         }
 
         val call = VoIPLibExampleApplication.callManager.activeCall ?: return
-        val isInTransfer = false
+        val isInTransfer = calls.transfer != null
 
         if (isInTransfer) {
-//            transferCallInformation.text = pil.calls.inactive?.remotePartyHeading
-//            if (pil.calls.inactive?.remotePartySubheading?.isNotBlank() == true) {
-//                transferCallInformation.text = "${transferCallInformation.text} (${pil.calls.inactive?.remotePartySubheading})"
-//            }
+            transferCallInformation.text = calls.inactiveCall?.phoneNumber ?: ""
             transferContainer.visibility = View.VISIBLE
         } else {
             transferContainer.visibility = View.GONE

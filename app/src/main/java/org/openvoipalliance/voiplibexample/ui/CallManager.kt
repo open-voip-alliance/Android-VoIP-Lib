@@ -2,6 +2,7 @@ package org.openvoipalliance.voiplibexample.ui
 
 import android.content.Context
 import android.content.Intent
+import org.openvoipalliance.voiplib.model.AttendedTransferSession
 import org.openvoipalliance.voiplib.model.Call
 import org.openvoipalliance.voiplib.repository.initialise.CallListener
 import org.openvoipalliance.voiplibexample.ui.call.CallActivity
@@ -9,11 +10,26 @@ import org.openvoipalliance.voiplibexample.ui.call.IncomingCallActivity
 
 class CallManager(private val context: Context) : CallListener {
 
-    var activeCall: Call? = null
+    private var internalActiveCall: Call? = null
+
+    var transfer: AttendedTransferSession? = null
+
+    val activeCall: Call?
+        get() {
+            transfer?.let {
+                return it.to
+            }
+
+            return internalActiveCall
+        }
+
+    val inactiveCall: Call?
+        get() = transfer?.from
+
 
     override fun incomingCallReceived(call: Call) {
         if (activeCall == null) {
-            this.activeCall = call
+            this.internalActiveCall = call
             context.startActivity(Intent(context, IncomingCallActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK })
         }
         broadcast()
@@ -21,7 +37,7 @@ class CallManager(private val context: Context) : CallListener {
 
     override fun outgoingCallCreated(call: Call) {
         if (activeCall == null) {
-            this.activeCall = call
+            this.internalActiveCall = call
             context.startActivity(Intent(context, CallActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK })
         }
         broadcast()
@@ -33,7 +49,10 @@ class CallManager(private val context: Context) : CallListener {
     }
 
     override fun callEnded(call: Call) {
-        activeCall = null
+        if (transfer == null) {
+            internalActiveCall = null
+        }
+        transfer = null
         broadcast()
     }
 
