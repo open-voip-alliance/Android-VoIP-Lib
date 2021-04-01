@@ -56,13 +56,12 @@
             app:key="echo_cancellation"
             app:title="Echo Cancellation"
             app:summary="This actually controls software echo cancellation. If hardware echo cancellation is available, it will be always used and activated for calls,
-            regardless of the value passed to this function. When hardware echo cancellation is available, the software one is of course not activated."/>
+            regardless of the value passed to this function."/>
         <SwitchPreferenceCompat
             app:icon="@drawable/ic_baseline_settings_ethernet_24"
             app:key="adaptive_rate_control"
             app:title="Adaptive Rate Control"
-            app:summary="Adaptive rate control consists in using RTCP feedback provided information to dynamically control the output bitrate of the audio and video encoders, so that we can adapt to the network conditions and available bandwidth. Control of the audio encoder is done in case of audio-only call,
-            and control of the video encoder is done for audio &amp; video calls. Adaptive rate control feature is enabled by default."/>
+            app:summary="Adaptive rate control consists in using RTCP feedback provided information to dynamically control the output bitrate of the audio and video encoders, so that we can adapt to the network conditions and available bandwidth. Adaptive rate control feature is enabled by default."/>
         <EditTextPreference
             app:icon="@drawable/ic_baseline_wifi_24"
             app:key="mtu"
