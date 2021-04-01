@@ -28,6 +28,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         initializeAdvancedDefaults()
         setPreferencesFromResource(R.xml.settings, rootKey)
 
+        findPreference<Preference>("underlying_version")?.summaryProvider = Preference.SummaryProvider<Preference> {
+            VoIPLib.getInstance(requireActivity()).version()
+        }
+
         findPreference<EditTextPreference>("username")?.summaryProvider = Preference.SummaryProvider<EditTextPreference> {
             prefs.getString("username", "")
         }

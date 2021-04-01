@@ -35,4 +35,6 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
     override fun wake() {
         linphoneCoreInstanceManager.safeLinphoneCore?.ensureRegistered()
     }
+
+    override fun version(): String = linphoneCoreInstanceManager.safeLinphoneCore?.version ?: ""
 }

@@ -120,6 +120,12 @@ class VoIPLib private constructor(private val context: Context) {
      */
     fun actions(call: Call) = Actions(context, call)
 
+    /**
+     * Return the current version of the underlying voip library.
+     *
+     */
+    fun version() = sipInitialiseRepository.version()
+
     companion object {
         private var instance: VoIPLib? = null
         internal lateinit var injection: Injection

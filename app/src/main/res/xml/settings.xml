@@ -39,6 +39,15 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        app:title="Info"
+        app:iconSpaceReserved="false">
+        <Preference
+            app:icon="@drawable/ic_baseline_sip_24"
+            app:key="underlying_version"
+            app:title="Linphone Version" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
         app:title="Advanced VoIP Settings"
         app:iconSpaceReserved="false">
         <MultiSelectListPreference

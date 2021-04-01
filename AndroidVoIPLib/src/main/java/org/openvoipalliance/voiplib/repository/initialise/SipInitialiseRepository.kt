@@ -10,4 +10,5 @@ internal interface SipInitialiseRepository {
     fun currentConfig(): Config
     fun isInitialised(): Boolean
     fun wake()
+    fun version(): String
 }
