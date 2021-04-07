@@ -30,6 +30,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.1.0")
     testImplementation("junit:junit:4.12")
+    implementation("com.google.code.gson:gson:2.8.6")
 
     api("org.koin:koin-android:2.2.2")
     embed("org.linphone:linphone-sdk-android:4.5.0")

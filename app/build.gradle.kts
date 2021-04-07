@@ -60,7 +60,6 @@ dependencies {
     kapt("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-    implementation("com.google.code.gson:gson:2.8.6")
     api(project(":AndroidVoIPLib"))
 
     androidTestImplementation("androidx.test.espresso:espresso-core:3.1.0") {
