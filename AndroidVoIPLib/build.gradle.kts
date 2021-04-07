@@ -39,7 +39,7 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("Production") {
-            artifact("$buildDir/outputs/aar/AndroidPhoneLib-release.aar")
+            artifact("$buildDir/outputs/aar/AndroidVoIPLib-release.aar")
             groupId = "org.openvoipalliance"
             artifactId = "AndroidPhoneLib"
             version = libraryVersion
