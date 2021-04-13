@@ -1,6 +1,6 @@
 package org.openvoipalliance.voiplib.repository.registration
 
-import android.R.attr
+import android.util.Log
 import org.linphone.core.*
 import org.openvoipalliance.voiplib.repository.LinphoneCoreInstanceManager
 import org.openvoipalliance.voiplib.repository.SimpleCoreListener
@@ -45,14 +45,31 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
             }
         })
 
-        core.transports = core.transports.apply {
-            udpPort = if (config.encryption) attr.port else RANDOM_PORT
-            tcpPort = if (config.encryption) attr.port else RANDOM_PORT
-            tlsPort = RANDOM_PORT
+        if (config.auth.port < 1 || config.auth.port > 65535) {
+            throw IllegalArgumentException("Unable to register with a server when port is invalid: ${config.auth.port}")
         }
 
-        core.mediaEncryption = if (config.encryption) MediaEncryption.SRTP else MediaEncryption.None
-        core.isMediaEncryptionMandatory = config.encryption
+        if (config.encryption) {
+            core.apply {
+                transports = transports.apply {
+                    udpPort = DISABLED
+                    tcpPort = DISABLED
+                    tlsPort = RANDOM_PORT
+                }
+                mediaEncryption = MediaEncryption.SRTP
+                isMediaEncryptionMandatory = true
+            }
+        } else {
+            core.apply {
+                transports = transports.apply {
+                    udpPort = RANDOM_PORT
+                    tcpPort = DISABLED
+                    tlsPort = DISABLED
+                }
+                mediaEncryption = MediaEncryption.None
+                isMediaEncryptionMandatory = false
+            }
+        }
 
         config.stun?.let {
             core.stunServer = it
@@ -75,10 +92,9 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
         core.apply {
             addAuthInfo(authInfo)
             defaultProxyConfig = core.proxyConfigList.first()
-            useRfc2833ForDtmf = true
-            enableIpv6(false)
-            isPushNotificationEnabled = false
         }
+
+        Log.e("TEST123", "CONFIG:" + core?.config?.dump() + "")
     }
 
     private fun createProxyConfig(core: Core, name: String, domain: String, port: String): ProxyConfig {
@@ -118,5 +134,6 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
 
     companion object {
         const val RANDOM_PORT = -1
+        const val DISABLED = 0
     }
 }

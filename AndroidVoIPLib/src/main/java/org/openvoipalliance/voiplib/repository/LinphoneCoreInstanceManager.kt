@@ -1,8 +1,6 @@
 package org.openvoipalliance.voiplib.repository
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -17,8 +15,7 @@ import org.openvoipalliance.voiplib.model.Call
 import org.openvoipalliance.voiplib.model.Codec
 import org.openvoipalliance.voiplib.model.PathConfigurations
 import org.openvoipalliance.voiplib.repository.initialise.LogLevel
-import java.io.File
-import java.io.IOException
+import java.io.BufferedReader
 import java.util.*
 import org.linphone.core.Call as LinphoneCall
 
@@ -63,19 +60,20 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
     @Synchronized
     private fun startLibLinphone(context: Context) {
         try {
-            copyAssetsFromPackage()
             linphoneCore = Factory.instance().createCoreWithConfig(
-                    Factory.instance().createConfig(pathConfigurations.linphoneConfigFile),
+                    Factory.instance().createConfigFromString(
+                            context.resources.openRawResource(R.raw.linphonerc_factory).bufferedReader().use(BufferedReader::readText)
+                    ),
                     context).apply {
                 addListener(this@LinphoneCoreInstanceManager)
                 enableDnsSrv(false)
                 enableDnsSearch(false)
-                isAutoIterateEnabled = true
                 start()
             }
 
             initLibLinphone()
 
+            Log.e("TEST123", "CONFIG:" + linphoneCore?.config?.dump() + "")
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e(TAG, "startLibLinphone: cannot start linphone")
@@ -89,15 +87,8 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
 
         linphoneCore?.apply {
             setUserAgent(userConfig.userAgent, null)
-            remoteRingbackTone = pathConfigurations.ringSound
             ring = userConfig.ring
-            playFile = pathConfigurations.pauseSound
-            rootCa = pathConfigurations.linphoneRootCaFile
-            remoteRingbackTone = pathConfigurations.ringSound
             isNetworkReachable = true
-            config?.setInt("audio", "codec_bitrate_limit", BITRATE_LIMIT)
-            downloadBandwidth = DOWNLOAD_BANDWIDTH
-            uploadBandwidth = UPLOAD_BANDWIDTH
         }
 
         config.logListener?.onLogMessageWritten(LogLevel.MESSAGE, "Applying ${userConfig.advancedVoIPSettings}")
@@ -111,49 +102,19 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
             enableAudioAdaptiveJittcomp(userConfig.advancedVoIPSettings.jitterCompensation)
         }
 
-        setCodecMime(config.codecs.toSet())
+        configureCodecs(config.codecs.toSet())
         destroyed = false
     }
 
-    private fun setCodecMime(audioCodecs: Set<Codec>) {
-        linphoneCore?.let {
-            for (payloadType in it.audioPayloadTypes) {
-                payloadType.enable(audioCodecs.contains(Codec.valueOf(payloadType.mimeType.toUpperCase(Locale.ROOT))))
-            }
-        }
-    }
+    private fun configureCodecs(audioCodecs: Set<Codec>) {
+        val linphoneCore = linphoneCore ?: return
 
-    @Throws(IOException::class)
-    private fun copyAssetsFromPackage() {
-        copyIfNotExist(mServiceContext, R.raw.oldphone_mono, pathConfigurations.ringSound)
-        copyIfNotExist(mServiceContext, R.raw.ringback, pathConfigurations.ringBackSound)
-        copyIfNotExist(mServiceContext, R.raw.toy_mono, pathConfigurations.pauseSound)
-        copyIfNotExist(mServiceContext, R.raw.linphonerc_default, pathConfigurations.linphoneConfigFile)
-        copyIfNotExist(mServiceContext, R.raw.linphonerc_factory, File(pathConfigurations.linphoneFactoryConfigFile).name)
-        copyIfNotExist(mServiceContext, R.raw.lpconfig, pathConfigurations.linphoneConfigXsp)
-        copyIfNotExist(mServiceContext, R.raw.rootca, pathConfigurations.linphoneRootCaFile)
-    }
+        linphoneCore.videoPayloadTypes.forEach { payloadType -> payloadType.enable(false) }
 
-    @Throws(IOException::class)
-    fun copyIfNotExist(context: Context, resourceId: Int, target: String?) {
-        val fileToCopy = File(target ?: "")
-        if (!fileToCopy.exists()) {
-            copyFromPackage(context, resourceId, fileToCopy.name)
+        linphoneCore.audioPayloadTypes.forEach { it.enable(false) }
+        for (payloadType in linphoneCore.audioPayloadTypes) {
+            payloadType.enable(audioCodecs.contains(Codec.valueOf(payloadType.mimeType.toUpperCase(Locale.ROOT))))
         }
-    }
-
-    @Throws(IOException::class)
-    fun copyFromPackage(context: Context, resourceId: Int, target: String?) {
-        val outputStream = context.openFileOutput(target, 0)
-        val inputStream = context.resources.openRawResource(resourceId)
-        var readByte: Int
-        val buff = ByteArray(8048)
-        while (inputStream.read(buff).also { readByte = it } != -1) {
-            outputStream.write(buff, 0, readByte)
-        }
-        outputStream.flush()
-        outputStream.close()
-        inputStream.close()
     }
 
     override fun onCallStateChanged(lc: Core, linphoneCall: LinphoneCall, state: LinphoneCall.State, message: String) {
