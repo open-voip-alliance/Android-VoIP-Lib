@@ -8,7 +8,7 @@ import org.openvoipalliance.voiplib.repository.SimpleCoreListener
 internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipRegisterRepository {
 
     private val config
-        get() = linphoneCoreInstanceManager.config
+        get() = linphoneCoreInstanceManager.voipLibConfig
 
     @Throws(CoreException::class)
     override fun register(callback: RegistrationCallback) {
@@ -24,14 +24,14 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
                         org.openvoipalliance.voiplib.model.RegistrationState.PROGRESS
                     }
                     RegistrationState.Ok -> {
-                        linphoneCoreInstanceManager.isRegistered = true
+                        linphoneCoreInstanceManager.state.isRegistered = true
                         org.openvoipalliance.voiplib.model.RegistrationState.REGISTERED
                     }
                     RegistrationState.Cleared -> {
                         org.openvoipalliance.voiplib.model.RegistrationState.CLEARED
                     }
                     RegistrationState.Failed -> {
-                        linphoneCoreInstanceManager.isRegistered = false
+                        linphoneCoreInstanceManager.state.isRegistered = false
                         org.openvoipalliance.voiplib.model.RegistrationState.FAILED
                     }
                     else -> {
@@ -93,8 +93,6 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
             addAuthInfo(authInfo)
             defaultProxyConfig = core.proxyConfigList.first()
         }
-
-        Log.e("TEST123", "CONFIG:" + core?.config?.dump() + "")
     }
 
     private fun createProxyConfig(core: Core, name: String, domain: String, port: String): ProxyConfig {
@@ -130,7 +128,7 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
         }
     }
 
-    override fun isRegistered() = linphoneCoreInstanceManager.isRegistered
+    override fun isRegistered() = linphoneCoreInstanceManager.state.isRegistered
 
     companion object {
         const val RANDOM_PORT = -1

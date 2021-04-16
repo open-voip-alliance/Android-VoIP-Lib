@@ -2,8 +2,16 @@
 mtu=1300
 download_bw=0
 upload_bw=0
-push_notification=0
 use_ipv6=0
+
+[app]
+tunnel=disabled
+push_notification=0
+auto_start=1
+
+[tunnel]
+host=
+port=443
 
 [sip]
 guess_hostname=1
@@ -16,6 +24,7 @@ use_rfc2833=1
 sip_port=0
 sip_tcp_port=0
 sip_tls_port=0
+use_info=0
 
 [rtp]
 audio_rtp_port=7076
@@ -34,3 +43,6 @@ auto_iterate=1
 
 [audio]
 codec_bitrate_limit=36
+
+[video]
+enabled=0

@@ -13,7 +13,6 @@ import org.openvoipalliance.voiplib.R
 import org.openvoipalliance.voiplib.config.Config
 import org.openvoipalliance.voiplib.model.Call
 import org.openvoipalliance.voiplib.model.Codec
-import org.openvoipalliance.voiplib.model.PathConfigurations
 import org.openvoipalliance.voiplib.repository.initialise.LogLevel
 import java.io.BufferedReader
 import java.util.*
@@ -21,23 +20,18 @@ import org.linphone.core.Call as LinphoneCall
 
 private const val LINPHONE_DEBUG_TAG = "SIMPLE_LINPHONE"
 
-private const val BITRATE_LIMIT = 36
-private const val DOWNLOAD_BANDWIDTH = 0
-private const val UPLOAD_BANDWIDTH = 0
+internal class LinphoneCoreInstanceManager(private val context: Context): SimpleCoreListener, LoggingServiceListener {
 
-internal class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleCoreListener, LoggingServiceListener {
-    private var destroyed: Boolean = false
-    private var pathConfigurations: PathConfigurations = PathConfigurations(mServiceContext.filesDir.absolutePath)
-    lateinit var config: Config
+    internal val state = CoreState()
+
+    lateinit var voipLibConfig: Config
         internal set
-    private var linphoneCore: Core? = null
 
-    var isRegistered: Boolean = false
-    val initialised: Boolean get() = linphoneCore != null && !destroyed
+    private var linphoneCore: Core? = null
 
     val safeLinphoneCore: Core?
         get() {
-            return if (initialised) {
+            return if (state.initialised) {
                 linphoneCore
             } else {
                 Log.e(TAG, "Trying to get linphone core while not possible", Exception())
@@ -47,104 +41,98 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
 
     init {
         Factory.instance().setDebugMode(true, LINPHONE_DEBUG_TAG)
-        pathConfigurations = PathConfigurations(mServiceContext.filesDir.absolutePath)
     }
 
-    fun initialiseLinphone(context: Context, config: Config) {
-        this.config = config
-        Factory.instance().setDebugMode(true, LINPHONE_DEBUG_TAG)
-        config.logListener.let { Factory.instance().loggingService.addListener(this) }
-        startLibLinphone(context)
-    }
+    fun initialiseLinphone(config: Config) {
+        this.voipLibConfig = config
 
-    @Synchronized
-    private fun startLibLinphone(context: Context) {
         try {
-            linphoneCore = Factory.instance().createCoreWithConfig(
-                    Factory.instance().createConfigFromString(
-                            context.resources.openRawResource(R.raw.linphonerc_factory).bufferedReader().use(BufferedReader::readText)
-                    ),
-                    context).apply {
-                addListener(this@LinphoneCoreInstanceManager)
-                enableDnsSrv(false)
-                enableDnsSearch(false)
-                start()
-            }
-
-            initLibLinphone()
-
-            Log.e("TEST123", "CONFIG:" + linphoneCore?.config?.dump() + "")
+            startLibLinphone()
         } catch (e: Exception) {
-            e.printStackTrace()
+            config.logListener?.onLogMessageWritten(LogLevel.ERROR, "Failed to start Linphone: ${e.localizedMessage}")
             Log.e(TAG, "startLibLinphone: cannot start linphone")
         }
     }
 
     @Synchronized
-    @Throws(CoreException::class)
-    private fun initLibLinphone() {
-        val userConfig = this.config
+    @Throws(Exception::class)
+    private fun startLibLinphone() {
+        voipLibConfig.logListener.let { Factory.instance().loggingService.addListener(this) }
 
-        linphoneCore?.apply {
-            setUserAgent(userConfig.userAgent, null)
-            ring = userConfig.ring
-            isNetworkReachable = true
+        this.linphoneCore = createLinphoneCore(context).apply {
+            addListener(this@LinphoneCoreInstanceManager)
+            enableDnsSrv(false)
+            enableDnsSearch(false)
+            setDnsServers(arrayOf("8.8.8.8", "8.8.4.4"))
+            setDnsServersApp(arrayOf("8.8.8.8", "8.8.4.4"))
+            setUserAgent(voipLibConfig.userAgent, null)
+            ring = voipLibConfig.ring
+            configureCodecs(this)
+
+            log("Applying ${voipLibConfig.advancedVoIPSettings}")
+
+            enableEchoCancellation(voipLibConfig.advancedVoIPSettings.echoCancellation)
+            enableAdaptiveRateControl(voipLibConfig.advancedVoIPSettings.adaptiveRateControl)
+            mtu = voipLibConfig.advancedVoIPSettings.mtu
+            adaptiveRateAlgorithm = voipLibConfig.advancedVoIPSettings.adaptiveRateAlgorithm.name.toLowerCase(Locale.ROOT)
+            enableRtpBundle(voipLibConfig.advancedVoIPSettings.mediaMultiplexing)
+            enableAudioAdaptiveJittcomp(voipLibConfig.advancedVoIPSettings.jitterCompensation)
+        }.also {
+            it.start()
+            log("Started Linphone with config:\n ${it.config.dump()}")
         }
 
-        config.logListener?.onLogMessageWritten(LogLevel.MESSAGE, "Applying ${userConfig.advancedVoIPSettings}")
-
-        linphoneCore?.apply {
-            enableEchoCancellation(userConfig.advancedVoIPSettings.echoCancellation)
-            enableAdaptiveRateControl(userConfig.advancedVoIPSettings.adaptiveRateControl)
-            mtu = userConfig.advancedVoIPSettings.mtu
-            adaptiveRateAlgorithm = userConfig.advancedVoIPSettings.adaptiveRateAlgorithm.name.toLowerCase(Locale.ROOT)
-            enableRtpBundle(userConfig.advancedVoIPSettings.mediaMultiplexing)
-            enableAudioAdaptiveJittcomp(userConfig.advancedVoIPSettings.jitterCompensation)
-        }
-
-        configureCodecs(config.codecs.toSet())
-        destroyed = false
+        state.destroyed = false
     }
 
-    private fun configureCodecs(audioCodecs: Set<Codec>) {
-        val linphoneCore = linphoneCore ?: return
+    /**
+     * Creates the Linphone core by reading in the linphone raw configuration file.
+     *
+     */
+    private fun createLinphoneCore(context: Context) = Factory.instance().createCoreWithConfig(
+            Factory.instance().createConfigFromString(
+                    context.resources.openRawResource(R.raw.linphone_initial_config).bufferedReader().use(BufferedReader::readText)
+            ), context)
 
-        linphoneCore.videoPayloadTypes.forEach { payloadType -> payloadType.enable(false) }
+    private fun log(message: String, level: LogLevel = LogLevel.DEBUG) {
+        voipLibConfig.logListener?.onLogMessageWritten(message = message, lev = level)
+    }
 
-        linphoneCore.audioPayloadTypes.forEach { it.enable(false) }
-        for (payloadType in linphoneCore.audioPayloadTypes) {
-            payloadType.enable(audioCodecs.contains(Codec.valueOf(payloadType.mimeType.toUpperCase(Locale.ROOT))))
-        }
+    private fun configureCodecs(core: Core) {
+        val codecs = this.voipLibConfig.codecs
+
+        core.videoPayloadTypes.forEach { it.enable(false) }
+
+        core.audioPayloadTypes.forEach { it.enable(codecs.contains(Codec.valueOf(it.mimeType.toUpperCase(Locale.ROOT)))) }
     }
 
     override fun onCallStateChanged(lc: Core, linphoneCall: LinphoneCall, state: LinphoneCall.State, message: String) {
         Log.e(TAG, "callState: $state, Message: $message")
-Log.e("TEST123", "Remotparty:" + linphoneCall.remoteParams?.getCustomHeader("Remote-Party-ID"))
 
-        val call = Call(linphoneCall ?: return)
+        val call = Call(linphoneCall)
 
         Log.e(TAG, "callState: $state, Message: $message - SENDING EVENT")
 
         when (state) {
-            LinphoneCall.State.IncomingReceived -> config.callListener.incomingCallReceived(call)
-            LinphoneCall.State.OutgoingInit -> config.callListener.outgoingCallCreated(call)
+            LinphoneCall.State.IncomingReceived -> voipLibConfig.callListener.incomingCallReceived(call)
+            LinphoneCall.State.OutgoingInit -> voipLibConfig.callListener.outgoingCallCreated(call)
             LinphoneCall.State.Connected -> {
                 safeLinphoneCore?.activateAudioSession(true)
-                config.callListener.callConnected(call)
+                voipLibConfig.callListener.callConnected(call)
             }
-            LinphoneCall.State.End -> config.callListener.callEnded(call)
-            LinphoneCall.State.Error -> config.callListener.error(call)
-            else -> config.callListener.callUpdated(call)
+            LinphoneCall.State.End -> voipLibConfig.callListener.callEnded(call)
+            LinphoneCall.State.Error -> voipLibConfig.callListener.error(call)
+            else -> voipLibConfig.callListener.callUpdated(call)
         }
     }
 
     override fun onGlobalStateChanged(lc: Core, gstate: GlobalState, message: String) {
-        gstate?.let {
+        gstate.let {
             globalState = it
 
             when (it) {
-                Off -> config.onDestroy()
-                On -> config.onReady()
+                Off -> voipLibConfig.onDestroy()
+                On -> voipLibConfig.onReady()
                 else -> {}
             }
         }
@@ -152,7 +140,7 @@ Log.e("TEST123", "Remotparty:" + linphoneCall.remoteParams?.getCustomHeader("Rem
 
     override fun onLogMessageWritten(service: LoggingService, domain: String, lev: org.linphone.core.LogLevel, message: String) {
         GlobalScope.launch(Dispatchers.IO) {
-            config.logListener?.onLogMessageWritten(when (lev) {
+            voipLibConfig.logListener?.onLogMessageWritten(when (lev) {
                 Debug -> LogLevel.DEBUG
                 Trace -> LogLevel.TRACE
                 Message -> LogLevel.MESSAGE
@@ -165,7 +153,7 @@ Log.e("TEST123", "Remotparty:" + linphoneCall.remoteParams?.getCustomHeader("Rem
 
     @Synchronized
     fun destroy() {
-        isRegistered = false
+        state.isRegistered = false
         Factory.instance().loggingService.removeListener(this@LinphoneCoreInstanceManager)
         linphoneCore?.isNetworkReachable = false
         linphoneCore?.stop()
@@ -176,5 +164,11 @@ Log.e("TEST123", "Remotparty:" + linphoneCall.remoteParams?.getCustomHeader("Rem
     companion object {
         const val TAG = "VOIPLIB-LINPHONE"
         var globalState: GlobalState = Off
+    }
+
+    inner class CoreState {
+        var destroyed: Boolean = false
+        var isRegistered: Boolean = false
+        val initialised: Boolean get() = linphoneCore != null && !destroyed
     }
 }
