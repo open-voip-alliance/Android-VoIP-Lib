@@ -6,6 +6,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.preference.PreferenceManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.openvoipalliance.voiplib.VoIPLib
 import org.openvoipalliance.voiplib.config.AdaptiveRateAlgorithm
 import org.openvoipalliance.voiplib.config.AdvancedVoIPSettings
@@ -16,6 +19,7 @@ import org.openvoipalliance.voiplib.model.Codec.OPUS
 import org.openvoipalliance.voiplib.repository.initialise.LogLevel
 import org.openvoipalliance.voiplib.repository.initialise.LogLevel.*
 import org.openvoipalliance.voiplib.repository.initialise.LogListener
+import org.openvoipalliance.voiplibexample.logging.LogDao
 import org.openvoipalliance.voiplibexample.logging.LogEntry
 import org.openvoipalliance.voiplibexample.logging.RoomSingleton
 import org.openvoipalliance.voiplibexample.ui.CallManager
@@ -23,6 +27,10 @@ import java.time.LocalDateTime
 import java.util.*
 
 class VoIPLibExampleApplication: Application(), LogListener {
+
+    private val logDatabase: LogDao by lazy {
+        RoomSingleton.getInstance(this).logDao()
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -93,11 +101,13 @@ class VoIPLibExampleApplication: Application(), LogListener {
 
         if (blacklist.any { message.contains(it, ignoreCase = true) }) return
 
-        RoomSingleton.getInstance(this).logDao().save(LogEntry(
-                id = null,
-                datetime = LocalDateTime.now().toLocalTime().toString(),
-                message = message
-        ))
+        GlobalScope.launch(Dispatchers.IO) {
+            logDatabase.save(LogEntry(
+                    id = null,
+                    datetime = LocalDateTime.now().toLocalTime().toString(),
+                    message = message
+            ))
+        }
     }
 
 }

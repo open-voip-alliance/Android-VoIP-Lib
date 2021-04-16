@@ -9,7 +9,7 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
 
     override fun initialise(config: VoIPLibConfig) {
         Factory.instance()
-        linphoneCoreInstanceManager.initialiseLinphone(context, config)
+        linphoneCoreInstanceManager.initialiseLinphone(config)
     }
 
     override fun destroy() {
@@ -17,7 +17,7 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
     }
 
     override fun swapConfig(config: VoIPLibConfig) {
-        linphoneCoreInstanceManager.config = config
+        linphoneCoreInstanceManager.voipLibConfig = config
     }
 
     override fun refreshRegisters(): Boolean {
@@ -28,9 +28,9 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
         return false
     }
 
-    override fun currentConfig(): org.openvoipalliance.voiplib.config.Config = linphoneCoreInstanceManager.config
+    override fun currentConfig(): org.openvoipalliance.voiplib.config.Config = linphoneCoreInstanceManager.voipLibConfig
 
-    override fun isInitialised(): Boolean = linphoneCoreInstanceManager.initialised
+    override fun isInitialised(): Boolean = linphoneCoreInstanceManager.state.initialised
 
     override fun wake() {
         linphoneCoreInstanceManager.safeLinphoneCore?.ensureRegistered()
