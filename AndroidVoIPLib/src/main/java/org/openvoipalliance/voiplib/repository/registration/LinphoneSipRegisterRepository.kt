@@ -71,10 +71,6 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
             }
         }
 
-        config.stun?.let {
-            core.stunServer = it
-        }
-
         val authInfo = Factory.instance().createAuthInfo(config.auth.name, config.auth.name, config.auth.password,
                 null, null, "${config.auth.domain}:${config.auth.port}").apply {
             algorithm = null
@@ -106,9 +102,10 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
             qualityReportingCollector = null
             qualityReportingInterval = 0
             identityAddress = identifyAddress
-            avpfRrInterval = 0
-            avpfMode = AVPFMode.Disabled
+            isPushNotificationAllowed = false
+            avpfMode = AVPFMode.Default
             serverAddr = proxy
+            natPolicy = null
             done()
         }
     }

@@ -1,45 +1,15 @@
-[net]
-mtu=1300
-download_bw=0
-upload_bw=0
-use_ipv6=0
-
-[app]
-tunnel=disabled
-push_notification=0
-auto_start=1
-
 [tunnel]
 host=
 port=443
 
 [sip]
-guess_hostname=1
-inc_timeout=15
 register_only_when_network_is_up=1
 auto_answer_replacing_calls=1
 ping_with_options=0
 root_ca=/data/data/org.linphone/files/rootcaa.pem
-use_rfc2833=1
-sip_port=0
-sip_tcp_port=0
-sip_tls_port=0
-use_info=0
-
-[rtp]
-audio_rtp_port=7076
-video_rtp_port=9078
-audio_jitt_comp=60
-video_jitt_comp=60
-nortp_timeout=30
-disable_upnp=1
 
 [sound]
 dtmf_player_amp=0.1
-
-[misc]
-max_calls=10
-auto_iterate=1
 
 [audio]
 codec_bitrate_limit=36

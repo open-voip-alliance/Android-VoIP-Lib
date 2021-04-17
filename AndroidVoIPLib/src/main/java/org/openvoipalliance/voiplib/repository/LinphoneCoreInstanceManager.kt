@@ -59,30 +59,64 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
     private fun startLibLinphone() {
         voipLibConfig.logListener.let { Factory.instance().loggingService.addListener(this) }
 
+        val dns = arrayOf("8.8.8.8", "8.8.4.4")
+
         this.linphoneCore = createLinphoneCore(context).apply {
             addListener(this@LinphoneCoreInstanceManager)
+            isPushNotificationEnabled = false
+            transports = transports.apply {
+                tlsPort = Port.DISABLED.value
+                udpPort = Port.DISABLED.value
+                tcpPort = Port.DISABLED.value
+            }
+            enableIpv6(false)
             enableDnsSrv(false)
             enableDnsSearch(false)
-            setDnsServers(arrayOf("8.8.8.8", "8.8.4.4"))
-            setDnsServersApp(arrayOf("8.8.8.8", "8.8.4.4"))
+            setDnsServers(dns)
+            setDnsServersApp(dns)
             setUserAgent(voipLibConfig.userAgent, null)
+            useRfc2833ForDtmf = true
+            useInfoForDtmf = false
+            maxCalls = 2
             ring = voipLibConfig.ring
-            configureCodecs(this)
+            enableVideoDisplay(false)
+            enableVideoCapture(false)
+            isAutoIterateEnabled = true
+            uploadBandwidth = Bandwidth.INFINITE.value
+            downloadBandwidth = Bandwidth.INFINITE.value
+            mtu = 1300
+            guessHostname = true
+            incTimeout = 60
+            audioPort = Port.RANDOM.value
+            nortpTimeout = 30
+            avpfMode = AVPFMode.Disabled
+            stunServer = voipLibConfig.stun
+            natPolicy = natPolicy?.apply {
+                enableStun(voipLibConfig.stun?.isNotEmpty() == true)
+                enableUpnp(false)
+            }
+            audioJittcomp = 100
+        }.also {
+            it.start()
+            configureCodecs(it)
+            applyAdvancedVoipSettings(it)
+            log("Started Linphone with config:\n ${it.config.dump()}")
+        }
 
-            log("Applying ${voipLibConfig.advancedVoIPSettings}")
+        state.destroyed = false
+    }
 
+    private fun applyAdvancedVoipSettings(core: Core) {
+        log("Applying ${voipLibConfig.advancedVoIPSettings}")
+
+        core.apply {
             enableEchoCancellation(voipLibConfig.advancedVoIPSettings.echoCancellation)
             enableAdaptiveRateControl(voipLibConfig.advancedVoIPSettings.adaptiveRateControl)
             mtu = voipLibConfig.advancedVoIPSettings.mtu
             adaptiveRateAlgorithm = voipLibConfig.advancedVoIPSettings.adaptiveRateAlgorithm.name.toLowerCase(Locale.ROOT)
             enableRtpBundle(voipLibConfig.advancedVoIPSettings.mediaMultiplexing)
             enableAudioAdaptiveJittcomp(voipLibConfig.advancedVoIPSettings.jitterCompensation)
-        }.also {
-            it.start()
-            log("Started Linphone with config:\n ${it.config.dump()}")
         }
-
-        state.destroyed = false
     }
 
     /**
@@ -103,15 +137,18 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
 
         core.videoPayloadTypes.forEach { it.enable(false) }
 
-        core.audioPayloadTypes.forEach { it.enable(codecs.contains(Codec.valueOf(it.mimeType.toUpperCase(Locale.ROOT)))) }
+        core.audioPayloadTypes.forEach {
+            it.enable(codecs.contains(Codec.valueOf(it.mimeType.toUpperCase(Locale.ROOT))))
+        }
+
+        log("Disabled codecs: " + core.audioPayloadTypes.filter { !it.enabled() }.joinToString(", ") { it.mimeType })
+        log("Enabled codecs: " + core.audioPayloadTypes.filter { it.enabled() }.joinToString(", ") { it.mimeType })
     }
 
     override fun onCallStateChanged(lc: Core, linphoneCall: LinphoneCall, state: LinphoneCall.State, message: String) {
-        Log.e(TAG, "callState: $state, Message: $message")
+        log("callState: $state, Message: $message")
 
         val call = Call(linphoneCall)
-
-        Log.e(TAG, "callState: $state, Message: $message - SENDING EVENT")
 
         when (state) {
             LinphoneCall.State.IncomingReceived -> voipLibConfig.callListener.incomingCallReceived(call)
@@ -171,4 +208,12 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
         var isRegistered: Boolean = false
         val initialised: Boolean get() = linphoneCore != null && !destroyed
     }
+}
+
+enum class Port(val value: Int) {
+    DISABLED(0), RANDOM(-1)
+}
+
+enum class Bandwidth(val value: Int) {
+    INFINITE(0)
 }
