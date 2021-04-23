@@ -148,6 +148,8 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
     override fun onCallStateChanged(lc: Core, linphoneCall: LinphoneCall, state: LinphoneCall.State, message: String) {
         log("callState: $state, Message: $message")
 
+        preserveInviteData(linphoneCall)
+
         val call = Call(linphoneCall)
 
         when (state) {
@@ -161,6 +163,25 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
             LinphoneCall.State.Error -> voipLibConfig.callListener.error(call)
             else -> voipLibConfig.callListener.callUpdated(call)
         }
+    }
+
+    /**
+     * When placing a call on hold, certain INVITE information is lost,
+     * this will ensure that the first value for a given call is preserved
+     * so it is always available, even after being put on hold.
+     *
+     * The data is only updated when a new, non-null, non-blank value
+     * is found.
+     */
+    private fun preserveInviteData(linphoneCall: org.linphone.core.Call) {
+        if (linphoneCall.userData == null) {
+            linphoneCall.userData = PreservedInviteData()
+        }
+
+        val userData = linphoneCall.userData as? PreservedInviteData ?: return
+
+        userData.pAssertedIdentity = linphoneCall.remoteParams?.getCustomHeader("P-Asserted-Identity")
+        userData.remotePartyId = linphoneCall.remoteParams?.getCustomHeader("Remote-Party-ID")
     }
 
     override fun onGlobalStateChanged(lc: Core, gstate: GlobalState, message: String) {
@@ -216,4 +237,24 @@ enum class Port(val value: Int) {
 
 enum class Bandwidth(val value: Int) {
     INFINITE(0)
+}
+
+/**
+ * Preserves certain information that is not necessarily
+ * carried between call objects.
+ */
+internal class PreservedInviteData {
+    var remotePartyId: String? = ""
+        set(value) {
+            if (value.isNullOrBlank()) return
+
+            field = value
+        }
+
+    var pAssertedIdentity: String? = ""
+        set(value) {
+            if (value.isNullOrBlank()) return
+
+            field = value
+        }
 }

@@ -3,6 +3,7 @@ package org.openvoipalliance.voiplib.model
 import org.linphone.core.Call.Dir.Incoming
 import org.linphone.core.Call.Dir.Outgoing
 import org.linphone.core.Reason
+import org.openvoipalliance.voiplib.repository.PreservedInviteData
 import org.linphone.core.Call as LinphoneCall
 
 class Call(val linphoneCall: LinphoneCall) {
@@ -54,6 +55,20 @@ class Call(val linphoneCall: LinphoneCall) {
         Outgoing -> Direction.OUTGOING
         Incoming -> Direction.INCOMING
     }
+
+    val remotePartyId: String
+        get() {
+            val userData = linphoneCall.userData as? PreservedInviteData ?: return ""
+
+            return userData.remotePartyId ?: ""
+        }
+
+    val pAssertedIdentity: String
+        get() {
+            val userData = linphoneCall.userData as? PreservedInviteData ?: return ""
+
+            return userData.pAssertedIdentity ?: ""
+        }
 
     val isOnHold: Boolean
         get() = when (state) {
