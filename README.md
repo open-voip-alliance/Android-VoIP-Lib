@@ -2,7 +2,7 @@
 
 # AndroidVoIPLib
 
-This is library is an opinionated VoIP wrapper for Android applications. It currently uses Linphone as the underlying SIP library.
+This library is an opinionated VoIP wrapper for Android applications. It currently uses Linphone as the underlying SIP library.
 
 ## Installation
 
@@ -10,7 +10,7 @@ Install using [Jitpack.io](https://jitpack.io/#open-voip-alliance/Android-VoIP-L
 
 ## Registration
 
-Step 1: Create a Config object . This object contains all the possible configuration options, however the auth parameter is the only one that is required, the rest will use sensible defaults.
+Step 1: Create a Config object. This object contains all the possible configuration options. However the auth parameter is the only one that is required, the rest will use sensible defaults.
 
 ```
 val config = Config(
@@ -56,7 +56,7 @@ The CallListener listens for the following events:
  - callUpdated
  - error
 
-All of these methods will provide a Call object, listening to these methods is the only way to obtain a call object so actions can be performed on it.
+All of these methods will provide a Call object. Listening to these methods is the only way to obtain a call object so actions can be performed on it.
 
 ### Outgoing call
 
@@ -80,7 +80,7 @@ or
 
     voipLib.actions(call).decline()
 
-There are many more actions available for calls, please look inspect the Actions class to see what more can be done to active calls.
+There are many more actions available for calls, please inspect the Actions class to see what more can be done to active calls.
 
  ## Basic Example
 
