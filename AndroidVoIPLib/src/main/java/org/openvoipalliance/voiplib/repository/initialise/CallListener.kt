@@ -46,4 +46,11 @@ interface CallListener {
      *
      */
     fun error(call: Call) {}
+
+    /**
+     * An Attended Transfer has completed and the two calls have been merged, this will occur
+     * before receiving the ended and released events.
+     *
+     */
+    fun attendedTransferMerged(call: Call) {}
 }

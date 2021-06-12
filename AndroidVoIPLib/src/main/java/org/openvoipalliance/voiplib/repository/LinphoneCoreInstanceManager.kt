@@ -165,6 +165,10 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
         }
     }
 
+    override fun onTransferStateChanged(lc: Core, transfered: org.linphone.core.Call, newCallState: org.linphone.core.Call.State) {
+        voipLibConfig.callListener.attendedTransferMerged(Call(transfered))
+    }
+
     /**
      * When placing a call on hold, certain INVITE information is lost,
      * this will ensure that the first value for a given call is preserved
