@@ -32,7 +32,7 @@ dependencies {
     testImplementation("junit:junit:4.12")
     implementation("com.google.code.gson:gson:2.8.6")
 
-    api("org.koin:koin-android:2.2.2")
+    api("io.insert-koin:koin-android:2.2.2")
     embed("org.linphone:linphone-sdk-android:4.5.0")
 }
 
