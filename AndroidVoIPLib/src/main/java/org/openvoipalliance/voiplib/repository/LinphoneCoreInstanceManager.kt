@@ -59,8 +59,6 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
     private fun startLibLinphone() {
         voipLibConfig.logListener.let { Factory.instance().loggingService.addListener(this) }
 
-        val dns = arrayOf("8.8.8.8", "8.8.4.4")
-
         this.linphoneCore = createLinphoneCore(context).apply {
             addListener(this@LinphoneCoreInstanceManager)
             isPushNotificationEnabled = false
@@ -72,8 +70,6 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
             enableIpv6(false)
             enableDnsSrv(false)
             enableDnsSearch(false)
-            setDnsServers(dns)
-            setDnsServersApp(dns)
             setUserAgent(voipLibConfig.userAgent, null)
             useRfc2833ForDtmf = true
             useInfoForDtmf = false
