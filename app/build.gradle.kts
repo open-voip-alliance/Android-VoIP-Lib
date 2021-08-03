@@ -77,10 +77,12 @@ fun addDefaultAuthValues(defaultConfig: com.android.build.api.dsl.DefaultConfig)
         defaultConfig.resValue("string", "default_sip_password", project.property("avl.default.password") as String)
         defaultConfig.resValue("string", "default_sip_domain", project.property("avl.default.domain") as String)
         defaultConfig.resValue("string", "default_sip_port", project.property("avl.default.port") as String)
+        defaultConfig.resValue("string", "default_destination", project.property("avl.default.destination") as String)
     } catch (e: groovy.lang.MissingPropertyException) {
         defaultConfig.resValue("string", "default_sip_user", "")
         defaultConfig.resValue("string", "default_sip_password", "")
         defaultConfig.resValue("string", "default_sip_domain", "")
         defaultConfig.resValue("string", "default_sip_port", "")
+        defaultConfig.resValue("string", "default_destination", "")
     }
 }

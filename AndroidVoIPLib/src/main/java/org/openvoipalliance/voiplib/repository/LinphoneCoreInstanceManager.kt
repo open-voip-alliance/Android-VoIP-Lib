@@ -59,47 +59,54 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
     private fun startLibLinphone() {
         voipLibConfig.logListener.let { Factory.instance().loggingService.addListener(this) }
 
-        this.linphoneCore = createLinphoneCore(context).apply {
-            addListener(this@LinphoneCoreInstanceManager)
-            isPushNotificationEnabled = false
-            transports = transports.apply {
-                tlsPort = Port.DISABLED.value
-                udpPort = Port.DISABLED.value
-                tcpPort = Port.DISABLED.value
-            }
-            enableIpv6(false)
-            enableDnsSrv(false)
-            enableDnsSearch(false)
-            setUserAgent(voipLibConfig.userAgent, null)
-            useRfc2833ForDtmf = true
-            useInfoForDtmf = false
-            maxCalls = 2
-            ring = voipLibConfig.ring
-            enableVideoDisplay(false)
-            enableVideoCapture(false)
-            isAutoIterateEnabled = true
-            uploadBandwidth = Bandwidth.INFINITE.value
-            downloadBandwidth = Bandwidth.INFINITE.value
-            mtu = 1300
-            guessHostname = true
-            incTimeout = 60
-            audioPort = Port.RANDOM.value
-            nortpTimeout = 30
-            avpfMode = AVPFMode.Disabled
-            stunServer = voipLibConfig.stun
-            natPolicy = natPolicy?.apply {
-                enableStun(voipLibConfig.stun?.isNotEmpty() == true)
-                enableUpnp(false)
-            }
-            audioJittcomp = 100
-        }.also {
+        this.linphoneCore = createLinphoneCore(context).also {
+            applyPreStartConfiguration(it)
             it.start()
+            applyPostStartConfiguration(it)
             configureCodecs(it)
             applyAdvancedVoipSettings(it)
             log("Started Linphone with config:\n ${it.config.dump()}")
         }
 
         state.destroyed = false
+    }
+
+    private fun applyPreStartConfiguration(core:Core) = core.apply {
+        addListener(this@LinphoneCoreInstanceManager)
+        isPushNotificationEnabled = false
+        transports = transports.apply {
+            tlsPort = Port.DISABLED.value
+            udpPort = Port.DISABLED.value
+            tcpPort = Port.DISABLED.value
+        }
+        enableIpv6(false)
+        enableDnsSrv(false)
+        enableDnsSearch(false)
+        setUserAgent(voipLibConfig.userAgent, null)
+        maxCalls = 2
+        ring = voipLibConfig.ring
+        enableVideoDisplay(false)
+        enableVideoCapture(false)
+        isAutoIterateEnabled = true
+        uploadBandwidth = Bandwidth.INFINITE.value
+        downloadBandwidth = Bandwidth.INFINITE.value
+        mtu = 1300
+        guessHostname = true
+        incTimeout = 60
+        audioPort = Port.RANDOM.value
+        nortpTimeout = 30
+        avpfMode = AVPFMode.Disabled
+        stunServer = voipLibConfig.stun
+        natPolicy = natPolicy?.apply {
+            enableStun(voipLibConfig.stun?.isNotEmpty() == true)
+            enableUpnp(false)
+        }
+        audioJittcomp = 100
+    }
+
+    private fun applyPostStartConfiguration(core: Core) = core.apply {
+        useInfoForDtmf = true
+        useRfc2833ForDtmf = true
     }
 
     private fun applyAdvancedVoipSettings(core: Core) {

@@ -55,6 +55,8 @@ class Dialer @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
         callButton.setOnClickListener {
             onCallListener?.onCall(digits)
         }
+
+        digits = context.getString(R.string.default_destination)
     }
 
     fun interface OnCallListener {
