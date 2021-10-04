@@ -185,4 +185,13 @@ internal interface SimpleCoreListener : CoreListener {
     override fun onAudioDevicesListUpdated(core: Core) {
 
     }
+
+    override fun onAccountRegistrationStateChanged(
+        core: Core,
+        account: Account,
+        state: RegistrationState?,
+        message: String
+    ) {
+
+    }
 }

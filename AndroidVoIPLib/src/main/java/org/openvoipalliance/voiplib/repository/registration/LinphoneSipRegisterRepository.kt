@@ -15,8 +15,13 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
         val core = linphoneCoreInstanceManager.safeLinphoneCore ?: return
 
         core.addListener(object : SimpleCoreListener {
-            override fun onRegistrationStateChanged(lc: Core, cfg: ProxyConfig, cstate: RegistrationState, message: String) {
-                callback.invoke(when (cstate) {
+            override fun onAccountRegistrationStateChanged(
+                core: Core,
+                account: Account,
+                state: RegistrationState?,
+                message: String
+            ) {
+                callback.invoke(when (state) {
                     RegistrationState.None -> {
                         org.openvoipalliance.voiplib.model.RegistrationState.NONE
                     }
@@ -39,7 +44,7 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
                     }
                 })
 
-                if (cstate == RegistrationState.Failed || cstate == RegistrationState.Ok) {
+                if (state == RegistrationState.Failed || state == RegistrationState.Ok) {
                     core.removeListener(this)
                 }
             }
