@@ -33,19 +33,14 @@ interface CallListener {
      */
     fun callEnded(call: Call) {}
 
+    fun callReleased(call: Call) {}
+
     /**
      * The state of the call has changed but it is likely not relevant, querying
      * the current state of the call can give you the exact change that occurred.
      *
      */
     fun callUpdated(call: Call) {}
-
-    /**
-     * Some error has occurred with the call, it will be a good idea to end the call
-     * and provide the user with an error message if this occurs.
-     *
-     */
-    fun error(call: Call) {}
 
     /**
      * An Attended Transfer has completed and the two calls have been merged, this will occur

@@ -120,6 +120,18 @@
                 android:layout_marginHorizontal="10dp"
                 android:text="DTMF"
                 android:enabled="true"/>
+
+            <Button
+                android:id="@+id/phoneButton"
+                android:layout_marginHorizontal="10dp"
+                android:text="Earpiece"
+                android:enabled="true"/>
+
+            <Button
+                android:id="@+id/speakerButton"
+                android:layout_marginHorizontal="10dp"
+                android:text="Speaker"
+                android:enabled="true"/>
         </TableRow>
 
         <TableRow android:layout_marginTop="20dp">

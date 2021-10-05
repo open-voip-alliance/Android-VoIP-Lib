@@ -29,6 +29,9 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
 
     private var linphoneCore: Core? = null
 
+    internal val logging: LoggingService
+        get() = Factory.instance().loggingService
+
     val safeLinphoneCore: Core?
         get() {
             return if (state.initialised) {
@@ -57,7 +60,9 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
     @Synchronized
     @Throws(Exception::class)
     private fun startLibLinphone() {
-        voipLibConfig.logListener.let { Factory.instance().loggingService.addListener(this) }
+        logging.setLogLevel(Message)
+
+        voipLibConfig.logListener.let { logging.addListener(this) }
 
         this.linphoneCore = createLinphoneCore(context).also {
             applyPreStartConfiguration(it)
@@ -149,7 +154,7 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
     }
 
     override fun onCallStateChanged(lc: Core, linphoneCall: LinphoneCall, state: LinphoneCall.State, message: String) {
-        log("callState: $state, Message: $message")
+        log("callState: $state, Message: $message, Duration = ${linphoneCall.duration}")
 
         preserveInviteData(linphoneCall)
 
@@ -162,8 +167,8 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
                 safeLinphoneCore?.activateAudioSession(true)
                 voipLibConfig.callListener.callConnected(call)
             }
-            LinphoneCall.State.End -> voipLibConfig.callListener.callEnded(call)
-            LinphoneCall.State.Error -> voipLibConfig.callListener.error(call)
+            LinphoneCall.State.End, LinphoneCall.State.Error -> voipLibConfig.callListener.callEnded(call)
+            LinphoneCall.State.Released -> voipLibConfig.callListener.callReleased(call)
             else -> voipLibConfig.callListener.callUpdated(call)
         }
     }

@@ -23,4 +23,12 @@ interface SipActiveCallControlsRepository {
     fun sendDtmf(call: Call, dtmf: String)
 
     fun provideCallInfo(call: Call): String
+
+    fun routeAudioToEarpiece(call: Call)
+
+    fun routeAudioToSpeaker(call: Call)
+
+    fun routeAudioToBluetooth(call: Call)
+
+    fun routeAudioToHeadset(call: Call)
 }

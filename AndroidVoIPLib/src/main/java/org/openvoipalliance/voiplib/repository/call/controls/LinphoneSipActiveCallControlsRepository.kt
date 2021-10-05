@@ -1,12 +1,18 @@
 package org.openvoipalliance.voiplib.repository.call.controls
 
 import com.google.gson.GsonBuilder
+import org.linphone.core.AudioDevice
+import org.linphone.core.Core
 import org.linphone.core.StreamType
+import org.linphone.core.tools.Log
 import org.openvoipalliance.voiplib.model.AttendedTransferSession
 import org.openvoipalliance.voiplib.model.Call
 import org.openvoipalliance.voiplib.repository.LinphoneCoreInstanceManager
 
 internal class LinphoneSipActiveCallControlsRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipActiveCallControlsRepository {
+
+    private val core: Core
+        get() = linphoneCoreInstanceManager.safeLinphoneCore!!
 
     override fun setMicrophone(on: Boolean) {
         linphoneCoreInstanceManager.safeLinphoneCore?.enableMic(on)
@@ -56,6 +62,52 @@ internal class LinphoneSipActiveCallControlsRepository(private val linphoneCoreI
                     .setPrettyPrinting()
                     .create()
                     .toJson(buildCallInfo(call.linphoneCall))
+
+    override fun routeAudioToEarpiece(call: Call) {
+        routeAudioTo(arrayListOf(AudioDevice.Type.Earpiece), call.linphoneCall)
+    }
+
+    override fun routeAudioToSpeaker(call: Call) {
+        routeAudioTo(arrayListOf(AudioDevice.Type.Speaker), call.linphoneCall)
+    }
+
+    override fun routeAudioToBluetooth(call: Call) {
+        routeAudioTo(arrayListOf(AudioDevice.Type.Bluetooth), call.linphoneCall)
+    }
+
+    override fun routeAudioToHeadset(call: Call) {
+        routeAudioTo(arrayListOf(AudioDevice.Type.Headphones, AudioDevice.Type.Headset), call.linphoneCall)
+    }
+
+    private fun routeAudioTo(types: List<AudioDevice.Type>, call: org.linphone.core.Call? = null) {
+        val listSize = types.size
+        val stringBuilder = StringBuilder()
+        var index = 0
+        while (index < listSize) {
+            stringBuilder.append(types[index].name)
+            if (index < listSize - 1) {
+                stringBuilder.append("/")
+            }
+            index++
+        }
+        val typesNames = stringBuilder.toString()
+
+        if (core.callsNb == 0) {
+            Log.e("[Audio Route Helper] No call found, aborting [$typesNames] audio route change")
+            return
+        }
+        val currentCall = call ?: core.currentCall ?: core.calls[0]
+
+        for (audioDevice in core.audioDevices) {
+            if (types.contains(audioDevice.type) && audioDevice.hasCapability(AudioDevice.Capabilities.CapabilityPlay)) {
+                linphoneCoreInstanceManager.logging.message("Found [${audioDevice.type}] audio device [${audioDevice.deviceName}], routing call audio to it")
+                currentCall.outputAudioDevice = audioDevice
+                return
+            }
+        }
+
+        linphoneCoreInstanceManager.logging.error("[Audio Route Helper] Couldn't find [$typesNames] audio device")
+    }
 
     private fun buildCallInfo(call: org.linphone.core.Call): Map<String, Any> = mapOf(
             "audio" to mapOf(

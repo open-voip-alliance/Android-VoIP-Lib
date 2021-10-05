@@ -60,6 +60,14 @@ class Actions(context: Context, private val call: Call) : VoIPLibKoinComponent {
      */
     fun hold(on: Boolean) = sipCallControlsRepository.setHold(call, on)
 
+    fun routeAudioToEarpiece(call: Call) = sipCallControlsRepository.routeAudioToEarpiece(call)
+
+    fun routeAudioToSpeaker(call: Call) = sipCallControlsRepository.routeAudioToSpeaker(call)
+
+    fun routeAudioToBluetooth(call: Call) = sipCallControlsRepository.routeAudioToBluetooth(call)
+
+    fun routeAudioToHeadset(call: Call) = sipCallControlsRepository.routeAudioToHeadset(call)
+
     /**
      * Transfer a session to a number unattended.
      * @param from The session you want to control.

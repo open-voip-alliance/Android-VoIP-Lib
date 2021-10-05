@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Typeface
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
@@ -93,6 +92,18 @@ class CallActivity : AppCompatActivity() {
                 setNegativeButton("Cancel") { _, _ ->
                 }
             }.show()
+        }
+
+        phoneButton.setOnClickListener {
+            calls.activeCall?.let {
+                lib.actions(it).routeAudioToEarpiece(it)
+            }
+        }
+
+        speakerButton.setOnClickListener {
+            calls.activeCall?.let {
+                lib.actions(it).routeAudioToSpeaker(it)
+            }
         }
     }
 
