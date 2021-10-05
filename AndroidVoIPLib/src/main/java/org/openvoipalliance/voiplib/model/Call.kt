@@ -16,13 +16,31 @@ class Call(val linphoneCall: LinphoneCall) {
                     ?: CallState.Unknown
 
     val displayName
-        get() = linphoneCall.remoteAddress?.displayName ?: ""
+        get() = linphoneCall.remoteAddress.displayName ?: ""
 
     val phoneNumber
-        get() = linphoneCall.remoteAddress?.username ?: ""
+        get() = linphoneCall.remoteAddress.username ?: ""
 
     val duration
         get() = linphoneCall.duration
+
+    /**
+     * Check if this is a missed call, this will likely not be valid until the call has been
+     * released.
+     *
+     */
+    val wasMissed: Boolean
+        get() {
+            val log = linphoneCall.callLog
+
+            val missedStatuses = arrayOf(
+                LinphoneCall.Status.Missed,
+                LinphoneCall.Status.Aborted,
+                LinphoneCall.Status.EarlyAborted,
+            )
+
+            return log.dir == Incoming && missedStatuses.contains(log.status)
+        }
 
     val reason
         get() = when (linphoneCall.reason) {
