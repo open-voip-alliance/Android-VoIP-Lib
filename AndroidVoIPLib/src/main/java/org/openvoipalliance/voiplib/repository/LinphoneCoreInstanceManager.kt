@@ -43,7 +43,7 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
         }
 
     init {
-        Factory.instance().setDebugMode(true, LINPHONE_DEBUG_TAG)
+        Factory.instance().setDebugMode(false, LINPHONE_DEBUG_TAG)
     }
 
     fun initialiseLinphone(config: Config) {
@@ -60,7 +60,7 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
     @Synchronized
     @Throws(Exception::class)
     private fun startLibLinphone() {
-        logging.setLogLevel(Message)
+        logging.setLogLevel(Warning)
 
         voipLibConfig.logListener.let { logging.addListener(this) }
 
