@@ -9,12 +9,10 @@ import org.linphone.core.*
 import org.linphone.core.GlobalState.Off
 import org.linphone.core.GlobalState.On
 import org.linphone.core.LogLevel.*
-import org.openvoipalliance.voiplib.R
 import org.openvoipalliance.voiplib.config.Config
 import org.openvoipalliance.voiplib.model.Call
 import org.openvoipalliance.voiplib.model.Codec
 import org.openvoipalliance.voiplib.repository.initialise.LogLevel
-import java.io.BufferedReader
 import java.util.*
 import org.linphone.core.Call as LinphoneCall
 
@@ -131,10 +129,8 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
      * Creates the Linphone core by reading in the linphone raw configuration file.
      *
      */
-    private fun createLinphoneCore(context: Context) = Factory.instance().createCoreWithConfig(
-            Factory.instance().createConfigFromString(
-                    context.resources.openRawResource(R.raw.linphone_initial_config).bufferedReader().use(BufferedReader::readText)
-            ), context)
+    private fun createLinphoneCore(context: Context)
+    = Factory.instance().createCore("", "", context)
 
     private fun log(message: String, level: LogLevel = LogLevel.DEBUG) {
         voipLibConfig.logListener?.onLogMessageWritten(message = message, lev = level)
@@ -154,22 +150,24 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
     }
 
     override fun onCallStateChanged(lc: Core, linphoneCall: LinphoneCall, state: LinphoneCall.State, message: String) {
-        log("callState: $state, Message: $message, Duration = ${linphoneCall.duration}")
+        GlobalScope.launch(Dispatchers.Main) {
+            log("callState: $state, Message: $message, Duration = ${linphoneCall.duration}")
 
-        preserveInviteData(linphoneCall)
+            preserveInviteData(linphoneCall)
 
-        val call = Call(linphoneCall)
+            val call = Call(linphoneCall)
 
-        when (state) {
-            LinphoneCall.State.IncomingReceived -> voipLibConfig.callListener.incomingCallReceived(call)
-            LinphoneCall.State.OutgoingInit -> voipLibConfig.callListener.outgoingCallCreated(call)
-            LinphoneCall.State.Connected -> {
-                safeLinphoneCore?.activateAudioSession(true)
-                voipLibConfig.callListener.callConnected(call)
+            when (state) {
+                LinphoneCall.State.IncomingReceived -> voipLibConfig.callListener.incomingCallReceived(call)
+                LinphoneCall.State.OutgoingInit -> voipLibConfig.callListener.outgoingCallCreated(call)
+                LinphoneCall.State.Connected -> {
+                    safeLinphoneCore?.activateAudioSession(true)
+                    voipLibConfig.callListener.callConnected(call)
+                }
+                LinphoneCall.State.End, LinphoneCall.State.Error -> voipLibConfig.callListener.callEnded(call)
+                LinphoneCall.State.Released -> voipLibConfig.callListener.callReleased(call)
+                else -> voipLibConfig.callListener.callUpdated(call)
             }
-            LinphoneCall.State.End, LinphoneCall.State.Error -> voipLibConfig.callListener.callEnded(call)
-            LinphoneCall.State.Released -> voipLibConfig.callListener.callReleased(call)
-            else -> voipLibConfig.callListener.callUpdated(call)
         }
     }
 
