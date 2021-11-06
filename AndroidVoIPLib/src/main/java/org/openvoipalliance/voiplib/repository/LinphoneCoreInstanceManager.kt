@@ -47,6 +47,11 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
     fun initialiseLinphone(config: Config) {
         this.voipLibConfig = config
 
+        if (linphoneCore != null) {
+            config.logListener?.onLogMessageWritten(LogLevel.WARNING, "Not initializing linphone, already initialized.")
+            return
+        }
+
         try {
             startLibLinphone()
         } catch (e: Exception) {
@@ -87,7 +92,8 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
         enableDnsSearch(false)
         setUserAgent(voipLibConfig.userAgent, null)
         maxCalls = 2
-        ring = voipLibConfig.ring
+        ring = null
+        isNativeRingingEnabled = false
         enableVideoDisplay(false)
         enableVideoCapture(false)
         isAutoIterateEnabled = true

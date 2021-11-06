@@ -26,12 +26,11 @@ android {
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-    implementation("androidx.appcompat:appcompat:1.2.0")
+    implementation("androidx.appcompat:appcompat:1.3.1")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:${rootProject.extra["kotlinVersion"]}")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.1.0")
-    testImplementation("junit:junit:4.12")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0")
     implementation("com.google.code.gson:gson:2.8.6")
+    implementation("androidx.media:media:1.4.3")
 
     api("io.insert-koin:koin-android:2.2.2")
     embed("org.linphone.minimal:linphone-sdk-android:5.0.49")
