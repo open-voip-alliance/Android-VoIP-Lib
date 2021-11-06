@@ -34,7 +34,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
 
     api("io.insert-koin:koin-android:2.2.2")
-    embed("org.linphone.no-video:linphone-sdk-android:5.0.38")
+    embed("org.linphone.minimal:linphone-sdk-android:5.0.49")
 }
 
 publishing {

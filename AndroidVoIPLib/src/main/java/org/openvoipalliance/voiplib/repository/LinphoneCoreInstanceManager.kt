@@ -221,6 +221,7 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
 
     @Synchronized
     fun destroy() {
+        state.destroyed = true
         state.isRegistered = false
         Factory.instance().loggingService.removeListener(this@LinphoneCoreInstanceManager)
         linphoneCore?.isNetworkReachable = false
