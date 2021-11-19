@@ -16,6 +16,12 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
     override fun register(callback: RegistrationCallback) {
         val core = linphoneCoreInstanceManager.safeLinphoneCore ?: return
 
+        if (core.proxyConfigList.isNotEmpty()) {
+            core.refreshRegisters()
+            callback(org.openvoipalliance.voiplib.model.RegistrationState.REGISTERED)
+            return
+        }
+
         // We do not want multiple registrations to occur, if we are already listening for one
         // we will not start anymore.
         if (listener != null) {
