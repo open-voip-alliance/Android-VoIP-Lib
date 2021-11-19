@@ -10,11 +10,19 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
     private val config
         get() = linphoneCoreInstanceManager.voipLibConfig
 
+    private var listener: SimpleCoreListener? = null
+
     @Throws(CoreException::class)
     override fun register(callback: RegistrationCallback) {
         val core = linphoneCoreInstanceManager.safeLinphoneCore ?: return
 
-        core.addListener(object : SimpleCoreListener {
+        // We do not want multiple registrations to occur, if we are already listening for one
+        // we will not start anymore.
+        if (listener != null) {
+            return
+        }
+
+        listener = object : SimpleCoreListener {
             override fun onAccountRegistrationStateChanged(
                 core: Core,
                 account: Account,
@@ -46,9 +54,12 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
 
                 if (state == RegistrationState.Failed || state == RegistrationState.Ok) {
                     core.removeListener(this)
+                    listener = null
                 }
             }
-        })
+        }
+
+        core.addListener(listener)
 
         if (config.auth.port < 1 || config.auth.port > 65535) {
             throw IllegalArgumentException("Unable to register with a server when port is invalid: ${config.auth.port}")
