@@ -43,7 +43,6 @@ class VoIPLibExampleApplication: Application(), LogListener {
                         callListener = callManager,
                         logListener = this,
                         advancedVoIPSettings = advancedSettingsFromPrefs(this),
-                        encryption = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("encryption", true),
                         codecs = PreferenceManager.getDefaultSharedPreferences(this).getCodecs()
                 )
         )

@@ -10,95 +10,32 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
     private val config
         get() = linphoneCoreInstanceManager.voipLibConfig
 
-    private var listener: SimpleCoreListener? = null
+    private val registrationListener = RegistrationListener()
+
+    private var callback: RegistrationCallback? = null
 
     @Throws(CoreException::class)
     override fun register(callback: RegistrationCallback) {
         val core = linphoneCoreInstanceManager.safeLinphoneCore ?: return
 
+        core.apply {
+            removeListener(registrationListener)
+            addListener(registrationListener)
+        }
+
+        this.callback = callback
+
         if (core.proxyConfigList.isNotEmpty()) {
+            linphoneCoreInstanceManager.log("Proxy config found, re-registering.")
             core.refreshRegisters()
-            callback(org.openvoipalliance.voiplib.model.RegistrationState.REGISTERED)
             return
         }
 
-        // We do not want multiple registrations to occur, if we are already listening for one
-        // we will not start anymore.
-        if (listener != null) {
-            return
-        }
-
-        listener = object : SimpleCoreListener {
-            override fun onAccountRegistrationStateChanged(
-                core: Core,
-                account: Account,
-                state: RegistrationState?,
-                message: String
-            ) {
-                callback.invoke(when (state) {
-                    RegistrationState.None -> {
-                        org.openvoipalliance.voiplib.model.RegistrationState.NONE
-                    }
-                    RegistrationState.Progress -> {
-                        org.openvoipalliance.voiplib.model.RegistrationState.PROGRESS
-                    }
-                    RegistrationState.Ok -> {
-                        linphoneCoreInstanceManager.state.isRegistered = true
-                        org.openvoipalliance.voiplib.model.RegistrationState.REGISTERED
-                    }
-                    RegistrationState.Cleared -> {
-                        org.openvoipalliance.voiplib.model.RegistrationState.CLEARED
-                    }
-                    RegistrationState.Failed -> {
-                        linphoneCoreInstanceManager.state.isRegistered = false
-                        org.openvoipalliance.voiplib.model.RegistrationState.FAILED
-                    }
-                    else -> {
-                        org.openvoipalliance.voiplib.model.RegistrationState.UNKNOWN
-                    }
-                })
-
-                if (state == RegistrationState.Failed || state == RegistrationState.Ok) {
-                    core.removeListener(this)
-                    listener = null
-                }
-            }
-        }
-
-        core.addListener(listener)
+        linphoneCoreInstanceManager.log("No proxy config found, registering for the first time.")
 
         if (config.auth.port < 1 || config.auth.port > 65535) {
             throw IllegalArgumentException("Unable to register with a server when port is invalid: ${config.auth.port}")
         }
-
-        if (config.encryption) {
-            core.apply {
-                transports = transports.apply {
-                    udpPort = DISABLED
-                    tcpPort = DISABLED
-                    tlsPort = RANDOM_PORT
-                }
-                mediaEncryption = MediaEncryption.SRTP
-                isMediaEncryptionMandatory = true
-            }
-        } else {
-            core.apply {
-                transports = transports.apply {
-                    udpPort = RANDOM_PORT
-                    tcpPort = DISABLED
-                    tlsPort = DISABLED
-                }
-                mediaEncryption = MediaEncryption.None
-                isMediaEncryptionMandatory = false
-            }
-        }
-
-        val authInfo = Factory.instance().createAuthInfo(config.auth.name, config.auth.name, config.auth.password,
-                null, null, "${config.auth.domain}:${config.auth.port}").apply {
-            algorithm = null
-        }
-
-        core.clearProxyConfig()
 
         val proxyConfig = createProxyConfig(core, config.auth.name, config.auth.domain, config.auth.port.toString())
 
@@ -108,9 +45,14 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
         }
 
         core.apply {
-            addAuthInfo(authInfo)
+            addAuthInfo(createAuthInfo())
             defaultProxyConfig = core.proxyConfigList.first()
         }
+    }
+
+    private fun createAuthInfo() = Factory.instance().createAuthInfo(config.auth.name, config.auth.name, config.auth.password,
+        null, null, "${config.auth.domain}:${config.auth.port}").apply {
+        algorithm = null
     }
 
     private fun createProxyConfig(core: Core, name: String, domain: String, port: String): ProxyConfig {
@@ -149,8 +91,21 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
 
     override fun isRegistered() = linphoneCoreInstanceManager.state.isRegistered
 
-    companion object {
-        const val RANDOM_PORT = -1
-        const val DISABLED = 0
+    private inner class RegistrationListener : SimpleCoreListener {
+        override fun onAccountRegistrationStateChanged(
+            core: Core,
+            account: Account,
+            state: RegistrationState?,
+            message: String
+        ) {
+
+            linphoneCoreInstanceManager.log("Received registration state change: ${state?.name}")
+
+            if (state == RegistrationState.Failed || state == RegistrationState.Ok) {
+                linphoneCoreInstanceManager.state.isRegistered = state == RegistrationState.Ok
+                callback?.invoke(if (state == RegistrationState.Ok) org.openvoipalliance.voiplib.model.RegistrationState.REGISTERED else org.openvoipalliance.voiplib.model.RegistrationState.FAILED)
+                callback = null
+            }
+        }
     }
 }

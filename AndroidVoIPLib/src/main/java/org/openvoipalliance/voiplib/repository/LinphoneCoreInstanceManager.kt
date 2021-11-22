@@ -83,10 +83,12 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
         addListener(this@LinphoneCoreInstanceManager)
         isPushNotificationEnabled = false
         transports = transports.apply {
-            tlsPort = Port.DISABLED.value
             udpPort = Port.DISABLED.value
             tcpPort = Port.DISABLED.value
+            tlsPort = Port.RANDOM.value
         }
+        mediaEncryption = MediaEncryption.SRTP
+        isMediaEncryptionMandatory = true
         enableIpv6(false)
         enableDnsSrv(false)
         enableDnsSearch(false)
@@ -138,7 +140,7 @@ internal class LinphoneCoreInstanceManager(private val context: Context): Simple
     private fun createLinphoneCore(context: Context)
     = Factory.instance().createCore("", "", context)
 
-    private fun log(message: String, level: LogLevel = LogLevel.DEBUG) {
+    internal fun log(message: String, level: LogLevel = LogLevel.DEBUG) {
         voipLibConfig.logListener?.onLogMessageWritten(message = message, lev = level)
     }
 
