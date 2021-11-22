@@ -155,11 +155,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val voIPLib = VoIPLib.getInstance(requireContext())
 
-        voIPLib.refreshConfig(
+        voIPLib.swapConfig(
                 voIPLib.currentConfig.copy(
                         auth = VoIPLibExampleApplication.authFromSharedPrefs(requireContext()),
                         advancedVoIPSettings = VoIPLibExampleApplication.advancedSettingsFromPrefs(requireContext()),
-                        encryption = prefs.getBoolean("encryption", true),
                         codecs = prefs.getCodecs()
                 )
         )
@@ -174,8 +173,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     }
                 }
             }
-
-
         }
     }
 
